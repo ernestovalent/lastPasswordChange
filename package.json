@@ -1,0 +1,22 @@
+{
+  "name": "lasspasswordchange",
+  "version": "0.0.1",
+  "description": "Deploy Nodejs to Lambda for sync user password in mysql databse",
+  "main": "start.js",
+  "scripts": {
+    "test": "nodemon start.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ernestovalent/lassPasswordChange.git"
+  },
+  "author": "Ernesto Valentin Caamal Peech",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ernestovalent/lassPasswordChange/issues"
+  },
+  "homepage": "https://github.com/ernestovalent/lassPasswordChange#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.9"
+  }
+}
