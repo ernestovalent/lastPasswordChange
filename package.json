@@ -18,5 +18,9 @@
   "homepage": "https://github.com/ernestovalent/lassPasswordChange#readme",
   "devDependencies": {
     "nodemon": "^2.0.9"
+  },
+  "dependencies": {
+    "@azure/cosmos": "^3.11.5",
+    "mysql": "^2.18.1"
   }
 }
