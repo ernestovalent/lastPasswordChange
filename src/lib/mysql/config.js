@@ -1,7 +1,7 @@
 const conexion = {
   host: 'host',
   user: 'user',
-  password: 'passwprd',
+  password: 'user',
   database: 'database',
   table: 'table'
 }

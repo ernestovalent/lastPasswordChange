@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "@azure/cosmos": "^3.11.5",
-    "mysql": "^2.18.1"
+    "axios": "^0.21.1",
+    "mysql": "^2.18.1",
+    "qs": "^6.10.1"
   }
 }
