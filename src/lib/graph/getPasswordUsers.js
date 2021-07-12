@@ -25,70 +25,92 @@ async function getToken(cosmosConfig){
     axios(config)
     .then(function (response) {
       resolve(response.data.token_type+' '+response.data.access_token);
-      console.log('Done');
+      console.log('Done token');
     })
     .catch(function (error) {
       reject(error);
-      console.log('Error');
+      console.log('Error token');
     });
   });
   return promise;
 }
 
-async function getPasswordUser(token){
-  console.log('trying get users password from graph');
+async function getPasswordBlock(config){
+  console.log('trying get password from a block users grah');
   let promise = new Promise( (resolve, reject) => {
-
-    let config = {
-      method: 'get',
-      url: 'https://graph.microsoft.com/beta/users?$count=true&$top=5&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
-      headers: { 
-        'ConsistencyLevel': 'eventual', 
-        'Authorization': token
-      }
-    };
-    
     axios(config)
-    .then(function (response) {
-      resolve(response.data.value);
-      console.log('Done');
-    })
-    .catch(function (error) {
+    .then((response) => {
+      resolve(response);
+      console.log('Done block');
+    }).catch( (error) => {
       reject(error);
-      console.log('Error');
+      console.log('Error block');
     });
-    
   });
   return promise;
 }
 
-async function createArray(userDataFromGraph){
-  console.log(('trying created array from user data'));
-  let promise = new Promise( (resolve, reject) => {
+function getAllPasswordUser(token){
+  console.log('trying get all users password from graph');
 
-    let newArray = new Array();
-    let date = new Date();
+  let config = {
+    method: 'get',
+    url: 'https://graph.microsoft.com/beta/users?$count=true&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
+    headers: {
+      'ConsistencyLevel': 'eventual', 
+      'Authorization': token
+    }
+  };
 
-    userDataFromGraph.forEach((element) => {
-      newArray.push([element.userPrincipalName, element.givenName, element.lastPasswordChangeDateTime, date.toISOString()])
+  let data = new Array();
+  let date = new Date();
+
+  return getPasswordBlock(config)
+    .then((response) => {
+
+      let users = response.data.value;
+
+      users.forEach(e => {
+        data.push([e.userPrincipalName,e.givenName,e.lastPasswordChangeDateTime,date.toISOString()]);
+      });
+
+      if(response.data['@odata.nextLink']){
+        return 
+      }else{
+        resolve(data);
+        console.log('Done all');
+      }
+      
+      
+    })
+    .catch((error) => {
+      reject(error);
+      console.log('Error all');
     });
-    resolve(newArray);
-    console.log('Done');
-  });
-  return promise;
 }
 
 async function getAllData(configFromCosmos){
   let promise = new Promise( (resolve, reject) => {
-    getToken(configFromCosmos).then((token) => {
-      getPasswordUser(token).then((users) => {
-        createArray(users).then((data) => {
-          resolve(data);
-        });
-      });
+    getToken(configFromCosmos)
+    .then((token) => {
+      getAllPasswordUser(token)
+      .then((passwordData) => resolve(passwordData));
+    })
+    .catch((error) => {
+      reject(error);
+      console.log(error);
     });
   });
   return promise;
 }
 
-module.exports = {getAllData};
+getAllData({
+  "clientId": "c8708f49-d13b-43bf-9236-338816c27ede",
+  "clientSecret": "9w_.r0~wGkpr5QVyE0Ny.fs2tgsw-vfLwG",
+  "userName": "xcaid@xcaret.com",
+  "userPassword": "Xbot@2021"
+}).then((response) => {
+  //console.log(response);
+});
+
+//module.exports = {getAllData};

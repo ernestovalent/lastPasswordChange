@@ -70,10 +70,15 @@ async function endMysql(){
 
 async function insertArray(array){
   let promise = new Promise( (resolve, reject) => {
+    try{
     connectMysql()
     .then(truncateMysql())
     .then(insertMysql(array))
     .then(endMysql());
+    resolve();
+    } catch(error) {
+      reject(error);
+    }
   });
   return promise;
 }

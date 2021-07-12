@@ -4,24 +4,36 @@ const mysql = require('./lib/mysql/insertUsers');
 
 async function getGraphConfig(){
   let promise = new Promise( (resolve, reject) => {
-    let getDocument = cosmos.getDocument();
-    resolve(getDocument);
+    try{
+      let getDocument = cosmos.getDocument();
+      resolve(getDocument);
+    }catch (error) {
+      reject(error);
+    }
   });
   return promise;
 }
 
 async function getDataFromGraph(cosmosDocument){
   let promise = new Promise( (resolve, reject) => {
-    let getAllData = graph.getAllData(cosmosDocument);
-    resolve(getAllData);
+    try{
+      let getAllData = graph.getAllData(cosmosDocument);
+      resolve(getAllData);
+    }catch (error){
+      reject(error);
+    }
   });
   return promise;
 }
 
 async function insertMysql(dataFromGraph){
   let promise = new Promise( (resolve, reject) => {
-    let inserts = mysql.insertArray(dataFromGraph);
-    resolve(inserts);
+    try{
+      let inserts = mysql.insertArray(dataFromGraph);
+      resolve(inserts);
+    }catch(error){
+      reject(error);
+    }
   });
   return promise;
 }
@@ -29,11 +41,11 @@ async function insertMysql(dataFromGraph){
 function main(){
   getGraphConfig().then( (graphConfig) => {
     getDataFromGraph(graphConfig.resource).then( (data) => {
-      insertMysql(data).then( (results) => {
-        
-      });
+      
     });
   });
 }
 
+function testing(){
+}
 main();
