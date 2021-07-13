@@ -32,6 +32,9 @@ module.exports = {
       uglifyOptions: {
         mangle: {
           keep_fnames: true
+        },
+        output: {
+          comments: false
         }
       }
     }),
