@@ -44,13 +44,13 @@ function getPasswords(config){
   let newConfig = config;
   let block = Axios(config)
   .then( (response) => {
+    createDataBlock(response.data.value);
     if(response.data['@odata.nextLink']){
       newConfig.url = response.data['@odata.nextLink'];
-      createDataBlock(response.data.value);
       return getPasswords(newConfig);
     }else{
       console.log('Ya no tiene datos...');
-      disconnectMysql();
+      sendNotify();
       return true;
     }
   })
@@ -115,13 +115,100 @@ function insertMysql(userData){
   });
 }
 
+
+
+function getPasswordExpireSoon(){
+  console.log('Query password expired soon');
+  let dateInit = new Date();
+  let dateEnd = new Date();
+  dateInit.setDate(dateInit.getDate()-85);
+  dateEnd.setDate(dateEnd.getDate()-80);
+  connection.query({
+    sql: 'SELECT principalName,givenName,lastChangePassword FROM ?? WHERE lastChangePassword BETWEEN ? AND ? ORDER BY lastChangePassword ASC',
+    values: [MysqlConfig.table,dateInit.toISOString().split('T')[0],dateEnd.toISOString().split('T')[0]]
+  }, (error, result, field) => {
+    if (error) {
+      return error;
+    }else{
+      let url = 'https://prod-191.westus.logic.azure.com:443/workflows/9b3d59e1970649dbb7837a4bf9cec82a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=fmZB9GBfno7cK9IYFZlDMPg-oUN_P9vjInX6AG9UHrc';
+      let data = JSON.stringify(result);
+      sendtoPowerAutomate(url,data);
+    }
+  });
+}
+
+function getPasswordExpiredVerySoon(){
+  console.log('Query password expired very soon');
+  let dateInit = new Date();
+  let dateEnd = new Date();
+  dateInit.setDate(dateInit.getDate()-90);
+  dateEnd.setDate(dateEnd.getDate()-85);
+  connection.query({
+    sql: 'SELECT principalName,givenName,lastChangePassword FROM ?? WHERE lastChangePassword BETWEEN ? AND ? ORDER BY lastChangePassword ASC',
+    values: [MysqlConfig.table,dateInit.toISOString().split('T')[0],dateEnd.toISOString().split('T')[0]]
+  }, (error, result, field) => {
+    if (error) {
+      return error;
+    }else{
+      let url = 'https://prod-38.westus.logic.azure.com:443/workflows/7c4478c95ce3407380101f182086324a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ETAvZ_0d7lxwWwoXUclnvGMYzPavG3voHCceBCSNriU';
+      let data = JSON.stringify(result);
+      sendtoPowerAutomate(url,data);
+    }
+  });
+}
+
+function getPasswordExpired(){
+  console.log('Query password expired');
+  let dateInit = new Date();
+  dateInit.setDate(dateInit.getDate()-90);
+  connection.query({
+    sql: 'SELECT principalName,givenName,lastChangePassword FROM ?? WHERE lastChangePassword <= ? ORDER BY lastChangePassword ASC',
+    values: [MysqlConfig.table,dateInit.toISOString().split('T')[0]]
+  }, (error, result, field) => {
+    if (error) {
+      return error;
+    }else{
+      let url = 'https://prod-145.westus.logic.azure.com:443/workflows/4152880efd0044ceb8ba5c95603c1726/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=cJ94WexenaslF-3RjuZflt07sevkkSA9J2FDy83Csrw';
+      let data = JSON.stringify(result);
+      sendtoPowerAutomate(url,data);
+    }
+  });
+}
+
+function sendtoPowerAutomate(url, data){
+  console.log('Sending data to Power Automate');
+  let config = {
+    method: 'post',
+    url: url,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: data
+  }
+  Axios(config)
+  .then( (response) => {
+    //console.log(JSON.stringify(response.datas));
+  })
+  .catch( (error) => {
+    console.log(error);
+  });
+}
+
+function sendNotify(){
+  getPasswordExpired();
+  getPasswordExpireSoon();
+  getPasswordExpiredVerySoon();
+  disconnectMysql();
+}
+
+
 getConfigFromCosmos().then((graphConfi) => {
   getTokenFromGraph(graphConfi.resource).then((token) => {
     connectMysql();
     truncateMysql();
     let configPassword = {
       method: 'get',
-      url: 'https://graph.microsoft.com/beta/users?$count=true&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
+      url: 'https://graph.microsoft.com/beta/groups/debeb1cf-3e8f-4753-a9eb-4fcc6481c7da/members/microsoft.graph.user?$count=true&$top=500&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
       headers: {
         'ConsistencyLevel': 'eventual', 
         'Authorization': token.data.token_type+' '+token.data.access_token

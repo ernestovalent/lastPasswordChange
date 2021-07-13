@@ -1,8 +1,8 @@
 {
   "name": "lasspasswordchange",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Deploy Nodejs to Lambda for sync user password in mysql databse",
-  "main": "start.js",
+  "main": "run.js",
   "scripts": {
     "test": "nodemon start.js"
   },
