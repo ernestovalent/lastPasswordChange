@@ -4,20 +4,27 @@
   "description": "Deploy Nodejs to Lambda for sync user password in mysql databse",
   "main": "run.js",
   "scripts": {
-    "test": "nodemon start.js"
+    "test": "nodemon src/run.js",
+    "build": "webpack --mode production --config webpack.config.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ernestovalent/lassPasswordChange.git"
   },
-  "author": "Ernesto Valentin Caamal Peech",
+  "author": "Ernesto Valentin Caamal Peech <ernesto.valen.t@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ernestovalent/lassPasswordChange/issues"
   },
   "homepage": "https://github.com/ernestovalent/lassPasswordChange#readme",
   "devDependencies": {
-    "nodemon": "^2.0.9"
+    "@babel/core": "^7.14.6",
+    "@babel/preset-env": "^7.14.7",
+    "babel-loader": "^8.2.2",
+    "nodemon": "^2.0.9",
+    "uglifyjs-webpack-plugin": "^2.2.0",
+    "webpack": "^5.44.0",
+    "webpack-cli": "^4.7.2"
   },
   "dependencies": {
     "@azure/cosmos": "^3.11.5",
