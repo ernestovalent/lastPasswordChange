@@ -9,7 +9,7 @@ const cosmos = new CosmosClient(CosmosConfig);
 const connection = mysql.createConnection(MysqlConfig);
 
 function getConfigFromCosmos(){
-  console.log('Get graph config from Cosmos');
+  console.log('+ Get graph config from Cosmos');
   let graphConfi = cosmos
   .database(CosmosConfig.databaseId)
   .container(CosmosConfig.containerId)
@@ -19,7 +19,7 @@ function getConfigFromCosmos(){
 }
 
 function getTokenFromGraph(grapConfig){
-  console.log('Get token from Graph');
+  console.log('| - Get token from Graph');
   let data = Qs.stringify({
     'grant_type': 'password',
     'client_id': grapConfig.clientId,
@@ -40,7 +40,7 @@ function getTokenFromGraph(grapConfig){
 }
 
 function getPasswords(config){
-  console.log('Get password block 100 from Graph');
+  console.log('| | + Get password block 100 from Graph');
   let newConfig = config;
   let block = Axios(config)
   .then( (response) => {
@@ -49,7 +49,7 @@ function getPasswords(config){
       newConfig.url = response.data['@odata.nextLink'];
       return getPasswords(newConfig);
     }else{
-      console.log('Ya no tiene datos...');
+      console.log('| | - Not get more data...');
       sendNotify();
       return true;
     }
@@ -60,27 +60,34 @@ function getPasswords(config){
 }
 
 function createDataBlock(data){
-  console.log('Create Data User');
-  let user = new Array();
-  let date = new Date();
-  data.forEach(e => {
-    user.push([e.userPrincipalName,e.givenName,e.lastPasswordChangeDateTime,date.toISOString()]);
+  console.log('| | | + Create Data User');
+  const promise = new Promise( (resolve, reject) => {
+    let user = new Array();
+    let date = new Date();
+    data.forEach(e => {
+      user.push([e.userPrincipalName,e.givenName,e.lastPasswordChangeDateTime,date.toISOString()]);
+    });
+    insertMysql(user);
+    resolve();
   });
-  insertMysql(user);
+  return promise;
 }
 
 function connectMysql(){
-  console.log('Connecting to Mysql');
-  connection.connect( (error) => {
-    if(error){
-      return false;
-    }
-    return true;
+  console.log('| + Trying connec to to MySQL');
+  const promise = new Promise( (resolve, reject) => {
+    connection.connect( (error) => {
+      if (error){
+        reject('| | - Error de conexion con MySQL: '+error);
+      }
+      resolve('| | - Conexion MySQL exitosa: '+connection.threadId);
+    });
   });
+  return promise;
 }
 
 function disconnectMysql(){
-  console.log('Disconnecting from Mysql');
+  console.log('| - Disconnecting from Mysql');
   connection.end( (error) => {
     if (error) {
       connection.destroy();
@@ -90,26 +97,26 @@ function disconnectMysql(){
 }
 
 function truncateMysql(){
-  console.log('truncate table from Mysql');
+  console.log('| | - truncate table from Mysql');
   connection.query({
     sql: 'TRUNCATE ??',
     values: [MysqlConfig.table]
   }, (error,result,field) => {
     if (error) {
-      return error;
+      console.error('Error en Query de MySQL: '+error);
     }
     return result;
   });
 }
 
 function insertMysql(userData){
-  console.log('insert block user to Mysql');
+  console.log('| | | | - insert block user to Mysql');
   connection.query({
     sql: 'INSERT INTO ?? (principalName, givenName, lastChangePassword, lastUpdate) VALUES ?',
     values: [MysqlConfig.table,userData]
   }, (error,result,field) => {
     if (error) {
-      return error;
+      console.error('Error en Query de MySQL: '+error);
     }
     return result;
   });
@@ -118,7 +125,7 @@ function insertMysql(userData){
 
 
 function getPasswordExpireSoon(){
-  console.log('Query password expired soon');
+  console.log('| | - Query password expired soon');
   let dateInit = new Date();
   let dateEnd = new Date();
   dateInit.setDate(dateInit.getDate()-85);
@@ -128,7 +135,7 @@ function getPasswordExpireSoon(){
     values: [MysqlConfig.table,dateInit.toISOString().split('T')[0],dateEnd.toISOString().split('T')[0]]
   }, (error, result, field) => {
     if (error) {
-      return error;
+      console.error('Error en Query de MySQL: '+error);
     }else{
       let url = 'https://prod-191.westus.logic.azure.com:443/workflows/9b3d59e1970649dbb7837a4bf9cec82a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=fmZB9GBfno7cK9IYFZlDMPg-oUN_P9vjInX6AG9UHrc';
       let data = JSON.stringify(result);
@@ -138,7 +145,7 @@ function getPasswordExpireSoon(){
 }
 
 function getPasswordExpiredVerySoon(){
-  console.log('Query password expired very soon');
+  console.log('| | | - Query password expired very soon');
   let dateInit = new Date();
   let dateEnd = new Date();
   dateInit.setDate(dateInit.getDate()-90);
@@ -148,7 +155,7 @@ function getPasswordExpiredVerySoon(){
     values: [MysqlConfig.table,dateInit.toISOString().split('T')[0],dateEnd.toISOString().split('T')[0]]
   }, (error, result, field) => {
     if (error) {
-      return error;
+      console.error('Error en Query de MySQL: '+error);
     }else{
       let url = 'https://prod-38.westus.logic.azure.com:443/workflows/7c4478c95ce3407380101f182086324a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ETAvZ_0d7lxwWwoXUclnvGMYzPavG3voHCceBCSNriU';
       let data = JSON.stringify(result);
@@ -158,7 +165,7 @@ function getPasswordExpiredVerySoon(){
 }
 
 function getPasswordExpired(){
-  console.log('Query password expired');
+  console.log('| | | - Query password expired');
   let dateInit = new Date();
   dateInit.setDate(dateInit.getDate()-90);
   connection.query({
@@ -166,7 +173,7 @@ function getPasswordExpired(){
     values: [MysqlConfig.table,dateInit.toISOString().split('T')[0]]
   }, (error, result, field) => {
     if (error) {
-      return error;
+      console.error('Error en Query de MySQL: '+error);
     }else{
       let url = 'https://prod-145.westus.logic.azure.com:443/workflows/4152880efd0044ceb8ba5c95603c1726/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=cJ94WexenaslF-3RjuZflt07sevkkSA9J2FDy83Csrw';
       let data = JSON.stringify(result);
@@ -176,7 +183,7 @@ function getPasswordExpired(){
 }
 
 function sendtoPowerAutomate(url, data){
-  console.log('Sending data to Power Automate');
+  console.log('- Sending data to Power Automate');
   let config = {
     method: 'post',
     url: url,
@@ -187,7 +194,6 @@ function sendtoPowerAutomate(url, data){
   }
   Axios(config)
   .then( (response) => {
-    //console.log(JSON.stringify(response.datas));
   })
   .catch( (error) => {
     console.log(error);
@@ -195,25 +201,37 @@ function sendtoPowerAutomate(url, data){
 }
 
 function sendNotify(){
+  console.log('| + Send notify');
   getPasswordExpired();
   getPasswordExpireSoon();
   getPasswordExpiredVerySoon();
   disconnectMysql();
 }
 
-
-getConfigFromCosmos().then((graphConfi) => {
-  getTokenFromGraph(graphConfi.resource).then((token) => {
-    connectMysql();
-    truncateMysql();
-    let configPassword = {
-      method: 'get',
-      url: 'https://graph.microsoft.com/beta/groups/debeb1cf-3e8f-4753-a9eb-4fcc6481c7da/members/microsoft.graph.user?$count=true&$top=500&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
-      headers: {
-        'ConsistencyLevel': 'eventual', 
-        'Authorization': token.data.token_type+' '+token.data.access_token
-      }
-    }
-    getPasswords(configPassword);
+function main(){
+  getConfigFromCosmos().then((graphConfi) => {
+    getTokenFromGraph(graphConfi.resource).then((token) => {
+      connectMysql().then( (response) => {
+        console.log(response);
+        truncateMysql();
+        let configPassword = {
+          method: 'get',
+          url: 'https://graph.microsoft.com/beta/groups/debeb1cf-3e8f-4753-a9eb-4fcc6481c7da/members/microsoft.graph.user?$count=true&$top=500&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
+          headers: {
+            'ConsistencyLevel': 'eventual', 
+            'Authorization': token.data.token_type+' '+token.data.access_token
+          }
+        }
+        getPasswords(configPassword);
+      }).catch((error) => {
+        console.error('Error de conexion con MySQL: '+error);
+      });
+    });
+  })
+  .catch( (error) => {
+    console.log(error);
   });
-});
+}
+
+module.exports = { main }
+//main();

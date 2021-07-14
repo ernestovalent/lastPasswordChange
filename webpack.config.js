@@ -7,7 +7,11 @@ module.exports = {
   target: 'node',
   output: {
     filename: 'main.js',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, 'dist'),
+    library: {
+      name: 'lassPassword',
+      type: 'commonjs'
+    }
   },
   node: {
     __dirname: true,
@@ -15,7 +19,7 @@ module.exports = {
   optimization: {
     minimize: false,
   },
-   module: {
+/*    module: {
     rules: [
       {
         test: /\.m?js$/,
@@ -25,7 +29,7 @@ module.exports = {
         }
       }
     ]
-  },
+  }, */
   plugins: [
     new UglifyJsPlugin({
       parallel: true,
