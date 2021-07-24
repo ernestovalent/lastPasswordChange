@@ -3,10 +3,10 @@ const CosmosClient = require("@azure/cosmos").CosmosClient;
 const Axios = require('axios').default;
 const Qs = require('qs');
 const MysqlConfig = require('./lib/mysql/config');
-const mysql = require('mysql');
+const Mysql = require('mysql');
 
 const cosmos = new CosmosClient(CosmosConfig);
-const connection = mysql.createConnection(MysqlConfig);
+const connection = Mysql.createConnection(MysqlConfig);
 
 function getConfigFromCosmos(){
   console.log('+ Get graph config from Cosmos');
@@ -40,7 +40,7 @@ function getTokenFromGraph(grapConfig){
 }
 
 function getPasswords(config){
-  console.log('| | + Get password block 100 from Graph');
+  console.log('| | + Get next block users from Graph');
   let newConfig = config;
   let block = Axios(config)
   .then( (response) => {
@@ -74,11 +74,11 @@ function createDataBlock(data){
 }
 
 function connectMysql(){
-  console.log('| + Trying connec to to MySQL');
+  console.log('| + Trying connect to MySQL');
   const promise = new Promise( (resolve, reject) => {
     connection.connect( (error) => {
       if (error){
-        reject('| | - Error de conexion con MySQL: '+error);
+        reject(error);
       }
       resolve('| | - Conexion MySQL exitosa: '+connection.threadId);
     });
@@ -99,7 +99,7 @@ function disconnectMysql(){
 function truncateMysql(){
   console.log('| | - truncate table from Mysql');
   connection.query({
-    sql: 'TRUNCATE ??',
+    sql: 'DELETE FROM ??',
     values: [MysqlConfig.table]
   }, (error,result,field) => {
     if (error) {
@@ -202,9 +202,9 @@ function sendtoPowerAutomate(url, data){
 
 function sendNotify(){
   console.log('| + Send notify');
-  getPasswordExpired();
-  getPasswordExpireSoon();
-  getPasswordExpiredVerySoon();
+  //getPasswordExpired();
+  //getPasswordExpireSoon();
+  //getPasswordExpiredVerySoon();
   disconnectMysql();
 }
 
@@ -216,7 +216,8 @@ function main(){
         truncateMysql();
         let configPassword = {
           method: 'get',
-          url: 'https://graph.microsoft.com/beta/groups/debeb1cf-3e8f-4753-a9eb-4fcc6481c7da/members/microsoft.graph.user?$count=true&$top=500&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
+          //url: 'https://graph.microsoft.com/beta/groups/debeb1cf-3e8f-4753-a9eb-4fcc6481c7da/members/microsoft.graph.user?$count=true&$top=500&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
+          url: 'https://graph.microsoft.com/beta/groups/d3337ec9-1c56-4b28-9b98-0a64e0eac23f/members/microsoft.graph.user?$count=true&$top=500&$select=userPrincipalName,givenName,lastPasswordChangeDateTime&$filter=accountEnabled eq true and onPremisesSyncEnabled eq true',
           headers: {
             'ConsistencyLevel': 'eventual', 
             'Authorization': token.data.token_type+' '+token.data.access_token
@@ -224,7 +225,7 @@ function main(){
         }
         getPasswords(configPassword);
       }).catch((error) => {
-        console.error('Error de conexion con MySQL: '+error);
+        console.error('| - Error de conexion con MySQL: '+error);
       });
     });
   })
